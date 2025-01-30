@@ -1,16 +1,22 @@
 from .models import Post,Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from .permissions import IsAuthorReadOnly
 from rest_framework.filters import SearchFilter
 from rest_framework.views import APIView
 
+from django.shortcuts import get_object_or_404
 
 from django.db.models import Q
 from rest_framework.response import Response
 
+from .models import Like
+
 from django.shortcuts import get_object_or_404
+from rest_framework import status
+from .utils import create_notification
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     
@@ -40,7 +46,17 @@ class CommentViewSet(viewsets.ModelViewSet):
         post = get_object_or_404(Post, id=post_id)  # Fetch Post using the post_id
         
         # 3. Save the new comment with the author and post associations
-        serializer.save(author=self.request.user, post=post)  # Associate the post and user (author) when saving
+        
+        create_notification(
+            
+            recipient=post.author,
+            actor= self.request.user,
+            verb="comment",
+            target_object=post
+              
+        )
+        serializer.save(author=self.request.user, post=post) 
+        # Associate the post and user (author) when saving
         
     
     
@@ -51,9 +67,46 @@ class FeedView(APIView):
         
         following_users = request.user.is_following.all()
         
-        following_users_posts = Post.objects.filter(Q(author__in =following_users )).order_by('-createed_at')
+        following_users_posts = Post.objects.filter(Q(author__in =following_users )).order_by('-created_at')
         
         serializer = PostSerializer(following_users_posts, many=True)
         
         return Response(serializer.data)
+    
+    
+class LikeView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self,request,post_id):
+        
+        post = get_object_or_404(Post, id=post_id)
+        
+        user = request.user
+        like , created = Like.objects.get_or_create(post=post, user=user)
+        
+        if created:
+            create_notification(
+                recipient=post.author,
+                actor = user,
+                verb = "like",
+                target_object= post
+            )
+            return Response(
+                {"message": "post is liked"}, status=status.HTTP_201_CREATED
+            )
+        return Response({"message": "post already liked"}, status=status.HTTP_200_OK)
+    
+    
+    
+class UnLikeView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self,request,post_id):
+        
+        post = get_object_or_404(Post, id = post_id)
+        user = request.user
+        like= Like.objects.get(post=post,user=user)
+        like.delete()
+        
+        return Response({"message": "post is unliked"}, status=status.HTTP_200_OK)
         

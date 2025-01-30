@@ -29,6 +29,8 @@ class CustomUserManager(BaseUserManager):
     
 class CustomUser(AbstractUser):
     bio = models.CharField(max_length=200)
+    
+    
     profile_picture = models.ImageField(upload_to='images', blank=True, null=True)
     followers = models.ManyToManyField('self',symmetrical=False,blank=True, related_name='followed_by')
     following = models.ManyToManyField('self',symmetrical=False,blank=True, related_name='is_following')

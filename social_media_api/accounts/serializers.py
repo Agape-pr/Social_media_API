@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = CustomUser
         
         fields = ['id','username','bio','profile_picture','password','following', 'followers']
-        
+        read_only_fields = ['following', 'followers']
         
     def create(self, validated_data):
              # Hash the password explicitly before saving

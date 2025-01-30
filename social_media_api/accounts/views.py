@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
-
+from posts.utils import create_notification
 # Create your views here.
 
 class UserListCreateView(ListCreateAPIView):
@@ -58,6 +58,7 @@ class UserRetrieveUpdateDestyroAPIView(RetrieveUpdateDestroyAPIView):
         
     
     #follow and unfollow dunctionality
+    
 class FollowView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -68,7 +69,12 @@ class FollowView(APIView):
         request.user.is_following.add(user_to_follow)
         user_to_follow.followed_by.add(request.user)
         
-        
+        create_notification(
+            recipient=user_to_follow,
+            actor= request.user,
+            verb="Follow",
+            target_object=request.user
+        )
         return Response(
             { "message": f"You are following new user {user_to_follow.username}"},
             status=status.HTTP_202_ACCEPTED
@@ -86,7 +92,7 @@ class UnfollowView(APIView):
         user_to_unfollow = CustomUser.objects.get(id=user_id)
         
         
-        request.is_following.remove(user_to_unfollow)
+        request.user.is_following.remove(user_to_unfollow)
         user_to_unfollow.followed_by.remove(request.user)
         return Response(
             { "message": f"You are unfollowing new user {user_to_unfollow.username}"},

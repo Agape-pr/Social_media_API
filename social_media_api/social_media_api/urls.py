@@ -27,5 +27,6 @@ urlpatterns = [
     # path('api/token/',TokenObtainPairView.as_view(), name='token'),
     # path('api/token/refresh/',TokenRefreshView.as_view(),name='token_refresh'),
     path('api/',include('posts.urls')),
-    
+    path('api/', include('notifications.urls')),
+   
 ]
