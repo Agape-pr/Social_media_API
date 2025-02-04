@@ -10,16 +10,23 @@ class UserSerializer(serializers.ModelSerializer):
 
 #go deep in 
 class NotificationSerializer(serializers.ModelSerializer):
-    recipient = UserSerializer(read_only=True)  # Serialize recipient correctly
-    actor = UserSerializer(read_only=True)  # Serialize actor correctly
-    target = serializers.SerializerMethodField()  # Handle GenericForeignKey
-
+    recipient = UserSerializer(read_only=True)  # Serialize recipient correctly with id and username
+    actor = UserSerializer(read_only=True)  # Serialize actor correctly with id and username
+    target = serializers.SerializerMethodField()  # Handle GenericForeignKey || 
+    # this SerializerMethodField() Dynamic serialization based on the model type. since model can be any.
     class Meta:
         model = Notification
         fields = ['id', 'recipient', 'actor', 'verb', 'target', 'timestamp', 'read']
         read_only_fields = ['id', 'recipient', 'actor', 'verb', 'target', 'timestamp']
 
     def get_target(self, obj):
+        """ 
+        Handle the serialization of the GenericForeignKey(reference to many models) `target`.
+        why get_target functionb: Because target is a GenericForeignKey, 
+        it could be any model (Post, Comment, etc.).
+        The method ensures the correct type and ID of the target are included in the response
+        """
+        
         """
         Handle the serialization of the GenericForeignKey `target`.
         """
