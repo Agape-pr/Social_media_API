@@ -535,7 +535,7 @@ class NotificationListView(APIView):
             "read_notifications": read_serializer.data
         })
 ```
-# view to set notification to read , automatically , which receives the ids , from the frontend side after getting opened.
+# view to set notification to read , automatically , which receives the ids , from the frontend side after being viewd..
 
 
 ```python 
